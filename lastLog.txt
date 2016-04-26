@@ -1,0 +1,383 @@
+﻿7984   option mprint;
+7985   %include "C:\Bits\cred\bs.sas";
+8144   %include "C:\Bits\cred\meister.sas";
+
+NOTE: The infile "C:/Bits/cred/meister.txt" is:
+      Filename=C:\Bits\cred\meister.txt,
+      RECFM=V,LRECL=125,File Size (bytes)=601,
+      Last Modified=05Apr2016:13:34:26,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 5 records were read from the infile "C:/Bits/cred/meister.txt".
+      The minimum record length was 109.
+      The maximum record length was 121.
+NOTE: The data set WORK.HACHEMEISTER has 5 observations and 25 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+
+
+8204   %include "C:\Bits\cred\smeister.sas";
+
+NOTE: The infile "C:/Bits/cred/smeister.txt" is:
+      Filename=C:\Bits\cred\smeister.txt,
+      RECFM=V,LRECL=28,File Size (bytes)=901,
+      Last Modified=17Mar2016:13:39:12,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 60 records were read from the infile "C:/Bits/cred/smeister.txt".
+      The minimum record length was 12.
+      The maximum record length was 14.
+NOTE: The data set WORK.SHACHEMEISTER has 60 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+
+
+8219   %include "C:\Bits\cred\tmeister.sas";
+
+NOTE: The infile "C:/Bits/cred/tmeister.txt" is:
+      Filename=C:\Bits\cred\tmeister.txt,
+      RECFM=V,LRECL=28,File Size (bytes)=621,
+      Last Modified=05Apr2016:13:35:30,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 25 records were read from the infile "C:/Bits/cred/tmeister.txt".
+      The minimum record length was 9.
+      The maximum record length was 24.
+NOTE: The data set WORK.THACHEMEISTER has 25 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+
+
+8235
+8236   data sHachemeister1;
+8237      set sHachemeister;
+8238      weight=1;
+8239      drop loss;
+8240   run;
+
+WARNING: The variable loss in the DROP, KEEP, or RENAME list has never been referenced.
+NOTE: There were 60 observations read from the data set WORK.SHACHEMEISTER.
+NOTE: The data set WORK.SHACHEMEISTER1 has 60 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+
+
+8241
+8242
+8243   %bs(
+8244       data      = shachemeister,
+8245       ratioVar  = lossRatio,
+8246       weightVar = weight,
+8247       policyVar = state,
+8248       out       = bs
+8249       );
+Processing BS
+MPRINT(BS):   data shachemeister;
+MPRINT(BS):   set shachemeister;
+MPRINT(BS):   loss = lossRatio * weight;
+MPRINT(BS):   run;
+
+NOTE: There were 60 observations read from the data set WORK.SHACHEMEISTER.
+NOTE: The data set WORK.SHACHEMEISTER has 60 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.03 seconds
+
+
+MPRINT(BS):   proc sql noprint;
+MPRINT(BS):   CREATE TABLE bs_1 AS SELECT state, sum(weight) AS weights_s, sum((weight > 0) *
+weight * lossRatio) / sum(weight) AS ratios_w FROM shachemeister GROUP BY state ;
+NOTE: Table WORK.BS_1 created, with 5 rows and 3 columns.
+
+MPRINT(BS):   SELECT sum(weights_s > 0) AS ncontracts, sum(weights_s) AS weights_ss INTO
+:nContracts, :weights_ss FROM bs_1 ;
+MPRINT(BS):   SELECT sum(not missing(weight)), sum((weight > 0) * weight * lossRatio) /
+sum(weight) INTO :nTotal, :x_w FROM shachemeister ;
+MPRINT(BS):   SELECT put( sum( weight * ((lossRatio - ratios_w)**2) / ( 60 - 5) ), BEST20.) INTO
+:S2 FROM shachemeister AS A LEFT JOIN bs_1 AS B ON shachemeister.state = bs_1.state ;
+MPRINT(BS):   SELECT put(sum( weights_s * ratios_w)/ 174047, BEST20.) INTO :x_w FROM bs_1 ;
+MPRINT(BS):   SELECT put( sum( weights_s * (ratios_w - 1865.4041896729)**2) ,BEST20. ) INTO :cp
+FROM bs_1 ;
+MPRINT(BS):   SELECT put( ( 5 - 1) * 139120025.925285 ,BEST20. ) INTO :mwith FROM bs_1 ;
+MPRINT(BS):   SELECT put( (( 174047)**2 - sum(weights_s**2)) ,BEST20. ) INTO :den FROM bs_1 ;
+MPRINT(BS):   SELECT put( 174047 * ( sum( weights_s * (ratios_w - 1865.4041896729)**2) -( 5 - 1)
+* 139120025.925285 ) /(( 174047)**2 - sum(weights_s**2)) ,BEST20. ) INTO :a FROM bs_1 ;
+MPRINT(BS):   QUIT;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.16 seconds
+      cpu time            0.17 seconds
+
+
+------------------------------------------
+|  nContracts =         5
+|  weights_ss =    174047
+|  nTotal     =        60
+|  x_w        =       1865.4041896729
+|  S2         =      139120025.925285
+|  cp         =      10010143322.1741
+|  mwith      =       556480103.70114
+|  den        =           18355701730
+WARNING: Apparent symbolic reference MYOUT not resolved.
+|  myout      =  &myout.
+|  x_w        =       1865.4041896729
+|  a          =       89638.726232755
+------------------------------------------
+8250   option mprint;
+8251   %include "C:\Bits\cred\bs.sas";
+8409   %include "C:\Bits\cred\meister.sas";
+
+NOTE: The infile "C:/Bits/cred/meister.txt" is:
+      Filename=C:\Bits\cred\meister.txt,
+      RECFM=V,LRECL=125,File Size (bytes)=601,
+      Last Modified=05Apr2016:13:34:26,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 5 records were read from the infile "C:/Bits/cred/meister.txt".
+      The minimum record length was 109.
+      The maximum record length was 121.
+NOTE: The data set WORK.HACHEMEISTER has 5 observations and 25 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.03 seconds
+
+
+8469   %include "C:\Bits\cred\smeister.sas";
+
+NOTE: The infile "C:/Bits/cred/smeister.txt" is:
+      Filename=C:\Bits\cred\smeister.txt,
+      RECFM=V,LRECL=28,File Size (bytes)=901,
+      Last Modified=17Mar2016:13:39:12,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 60 records were read from the infile "C:/Bits/cred/smeister.txt".
+      The minimum record length was 12.
+      The maximum record length was 14.
+NOTE: The data set WORK.SHACHEMEISTER has 60 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+
+
+8484   %include "C:\Bits\cred\tmeister.sas";
+
+NOTE: The infile "C:/Bits/cred/tmeister.txt" is:
+      Filename=C:\Bits\cred\tmeister.txt,
+      RECFM=V,LRECL=28,File Size (bytes)=621,
+      Last Modified=05Apr2016:13:35:30,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 25 records were read from the infile "C:/Bits/cred/tmeister.txt".
+      The minimum record length was 9.
+      The maximum record length was 24.
+NOTE: The data set WORK.THACHEMEISTER has 25 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.01 seconds
+
+
+8500
+8501   data sHachemeister1;
+8502      set sHachemeister;
+8503      weight=1;
+8504      drop loss;
+8505   run;
+
+WARNING: The variable loss in the DROP, KEEP, or RENAME list has never been referenced.
+NOTE: There were 60 observations read from the data set WORK.SHACHEMEISTER.
+NOTE: The data set WORK.SHACHEMEISTER1 has 60 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+
+
+8506
+8507
+8508   %bs(
+8509       data      = shachemeister,
+8510       ratioVar  = lossRatio,
+8511       weightVar = weight,
+8512       policyVar = state,
+8513       out       = bs
+8514       );
+Processing BS
+MPRINT(BS):   data shachemeister;
+MPRINT(BS):   set shachemeister;
+MPRINT(BS):   loss = lossRatio * weight;
+MPRINT(BS):   run;
+
+NOTE: There were 60 observations read from the data set WORK.SHACHEMEISTER.
+NOTE: The data set WORK.SHACHEMEISTER has 60 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.03 seconds
+
+
+MPRINT(BS):   proc sql noprint;
+MPRINT(BS):   CREATE TABLE bs_1 AS SELECT state, sum(weight) AS weights_s, sum((weight > 0) *
+weight * lossRatio) / sum(weight) AS ratios_w FROM shachemeister GROUP BY state ;
+NOTE: Table WORK.BS_1 created, with 5 rows and 3 columns.
+
+MPRINT(BS):   SELECT sum(weights_s > 0) AS ncontracts, sum(weights_s) AS weights_ss INTO
+:nContracts, :weights_ss FROM bs_1 ;
+MPRINT(BS):   SELECT sum(not missing(weight)), sum((weight > 0) * weight * lossRatio) /
+sum(weight) INTO :nTotal, :x_w FROM shachemeister ;
+MPRINT(BS):   SELECT put( sum( weight * ((lossRatio - ratios_w)**2) / ( 60 - 5) ), BEST20.) INTO
+:S2 FROM shachemeister AS A LEFT JOIN bs_1 AS B ON shachemeister.state = bs_1.state ;
+MPRINT(BS):   SELECT put(sum( weights_s * ratios_w)/ 174047, BEST20.) INTO :x_w FROM bs_1 ;
+MPRINT(BS):   SELECT put( sum( weights_s * (ratios_w - 1865.4041896729)**2) ,BEST20. ) INTO :cp
+FROM bs_1 ;
+MPRINT(BS):   SELECT put( ( 5 - 1) * 139120025.925285 ,BEST20. ) INTO :mwith FROM bs_1 ;
+MPRINT(BS):   SELECT put( (( 174047)**2 - sum(weights_s**2)) ,BEST20. ) INTO :den FROM bs_1 ;
+MPRINT(BS):   SELECT put( 174047 * ( sum( weights_s * (ratios_w - 1865.4041896729)**2) -( 5 - 1)
+* 139120025.925285 ) /(( 174047)**2 - sum(weights_s**2)) ,BEST20. ) INTO :a FROM bs_1 ;
+MPRINT(BS):   QUIT;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.15 seconds
+      cpu time            0.14 seconds
+
+
+------------------------------------------
+|  nContracts =         5
+|  weights_ss =    174047
+|  nTotal     =        60
+|  x_w        =       1865.4041896729
+|  S2         =      139120025.925285
+|  cp         =      10010143322.1741
+|  mwith      =       556480103.70114
+|  den        =           18355701730
+|  x_w        =       1865.4041896729
+|  a          =       89638.726232755
+------------------------------------------
+8515   option mprint;
+8516   %include "C:\Bits\cred\bs.sas";
+8677   %include "C:\Bits\cred\meister.sas";
+
+NOTE: The infile "C:/Bits/cred/meister.txt" is:
+      Filename=C:\Bits\cred\meister.txt,
+      RECFM=V,LRECL=125,File Size (bytes)=601,
+      Last Modified=05Apr2016:13:34:26,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 5 records were read from the infile "C:/Bits/cred/meister.txt".
+      The minimum record length was 109.
+      The maximum record length was 121.
+NOTE: The data set WORK.HACHEMEISTER has 5 observations and 25 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.03 seconds
+
+
+8737   %include "C:\Bits\cred\smeister.sas";
+
+NOTE: The infile "C:/Bits/cred/smeister.txt" is:
+      Filename=C:\Bits\cred\smeister.txt,
+      RECFM=V,LRECL=28,File Size (bytes)=901,
+      Last Modified=17Mar2016:13:39:12,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 60 records were read from the infile "C:/Bits/cred/smeister.txt".
+      The minimum record length was 12.
+      The maximum record length was 14.
+NOTE: The data set WORK.SHACHEMEISTER has 60 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+
+
+8752   %include "C:\Bits\cred\tmeister.sas";
+
+NOTE: The infile "C:/Bits/cred/tmeister.txt" is:
+      Filename=C:\Bits\cred\tmeister.txt,
+      RECFM=V,LRECL=28,File Size (bytes)=621,
+      Last Modified=05Apr2016:13:35:30,
+      Create Time=17Mar2016:13:39:12
+
+NOTE: 25 records were read from the infile "C:/Bits/cred/tmeister.txt".
+      The minimum record length was 9.
+      The maximum record length was 24.
+NOTE: The data set WORK.THACHEMEISTER has 25 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.01 seconds
+
+
+8768
+8769   data sHachemeister1;
+8770      set sHachemeister;
+8771      weight=1;
+8772      drop loss;
+8773   run;
+
+WARNING: The variable loss in the DROP, KEEP, or RENAME list has never been referenced.
+NOTE: There were 60 observations read from the data set WORK.SHACHEMEISTER.
+NOTE: The data set WORK.SHACHEMEISTER1 has 60 observations and 4 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.03 seconds
+
+
+8774
+8775
+8776   %bs(
+8777       data      = shachemeister,
+8778       ratioVar  = lossRatio,
+8779       weightVar = weight,
+8780       policyVar = state,
+8781       out       = bs
+8782       );
+Processing BS
+MPRINT(BS):   data shachemeister;
+MPRINT(BS):   set shachemeister;
+MPRINT(BS):   loss = lossRatio * weight;
+MPRINT(BS):   run;
+
+NOTE: There were 60 observations read from the data set WORK.SHACHEMEISTER.
+NOTE: The data set WORK.SHACHEMEISTER has 60 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.03 seconds
+
+
+MPRINT(BS):   proc sql noprint;
+MPRINT(BS):   CREATE TABLE bs_1 AS SELECT state, sum(weight) AS weights_s, sum((weight > 0) *
+weight * lossRatio) / sum(weight) AS ratios_w FROM shachemeister GROUP BY state ;
+NOTE: Table WORK.BS_1 created, with 5 rows and 3 columns.
+
+MPRINT(BS):   SELECT sum(weights_s > 0) AS ncontracts, sum(weights_s) AS weights_ss INTO
+:nContracts, :weights_ss FROM bs_1 ;
+MPRINT(BS):   SELECT sum(not missing(weight)), sum((weight > 0) * weight * lossRatio) /
+sum(weight) INTO :nTotal, :x_w FROM shachemeister ;
+MPRINT(BS):   SELECT put( sum( weight * ((lossRatio - ratios_w)**2) / ( 60 - 5) ), BEST20.) INTO
+:S2 FROM shachemeister AS A LEFT JOIN bs_1 AS B ON shachemeister.state = bs_1.state ;
+MPRINT(BS):   SELECT put(sum( weights_s * ratios_w)/ 174047, BEST20.) INTO :x_w FROM bs_1 ;
+MPRINT(BS):   SELECT put( sum( weights_s * (ratios_w - 1865.4041896729)**2) ,BEST20. ) INTO :cp
+FROM bs_1 ;
+MPRINT(BS):   SELECT put( ( 5 - 1) * 139120025.925285 ,BEST20. ) INTO :mwith FROM bs_1 ;
+MPRINT(BS):   SELECT put( (( 174047)**2 - sum(weights_s**2)) ,BEST20. ) INTO :den FROM bs_1 ;
+MPRINT(BS):   SELECT put( 174047 * ( sum( weights_s * (ratios_w - 1865.4041896729)**2) -( 5 - 1)
+* 139120025.925285 ) /(( 174047)**2 - sum(weights_s**2)) ,BEST20. ) INTO :a FROM bs_1 ;
+MPRINT(BS):   QUIT;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.19 seconds
+      cpu time            0.17 seconds
+
+
+------------------------------------------
+|  nContracts =         5
+|  weights_ss =    174047
+|  nTotal     =        60
+|  x_w        =       1865.4041896729
+|  S2         =      139120025.925285
+|  cp         =      10010143322.1741
+|  mwith      =       556480103.70114
+|  den        =           18355701730
+|  x_w        =       1865.4041896729
+|  a          =       89638.726232755
+------------------------------------------
+|  Between state variance     =       89638.726232755
+|  Within state variance      =      139120025.925285
+------------------------------------------
